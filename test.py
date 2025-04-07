@@ -136,3 +136,107 @@ def check_pipeline():
 
 # Run the pipeline check
 check_pipeline()
+
+from advanced_rag import AdvancedRAG
+import numpy as np
+import faiss
+from sentence_transformers import SentenceTransformer
+from transformers import BartForConditionalGeneration, BartTokenizer
+import time
+import psutil
+import logging
+
+def test_sbert_faiss_bart_pipeline():
+    print("\n✅ Checking SBERT, FAISS, and BART pipeline...")
+    
+    # Test SBERT
+    print("\n🔹 Loading SBERT Model...")
+    sbert_model = SentenceTransformer("facebook-dpr-ctx_encoder-single-nq-base")
+    print("✅ SBERT Loaded Successfully.")
+    
+    # Test embeddings
+    print("\n🔹 Encoding sentences with SBERT...")
+    sentences = [
+        "Retrieval-Augmented Generation improves NLP tasks.",
+        "SBERT provides semantic embeddings for text.",
+        "BART generates coherent text responses."
+    ]
+    embeddings = sbert_model.encode(sentences)
+    print(f"✅ Sentence Embeddings Shape: {embeddings.shape}")
+    
+    # Test FAISS
+    print("\n🔹 Creating FAISS Index...")
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(embeddings)
+    print(f"✅ FAISS Index Created with {index.ntotal} entries.")
+    
+    # Test retrieval
+    print("\n🔹 Testing retrieval with query...")
+    query = "How does retrieval help text generation?"
+    query_embedding = sbert_model.encode(query)
+    query_embedding = query_embedding.reshape(1, -1)
+    distances, indices = index.search(query_embedding, 1)
+    retrieved_text = sentences[indices[0][0]]
+    print(f"✅ Retrieved Text: {retrieved_text}")
+    
+    # Test BART
+    print("\n🔹 Loading BART Model...")
+    bart_model = BartForConditionalGeneration.from_pretrained("facebook/bart-large")
+    tokenizer = BartTokenizer.from_pretrained("facebook/bart-large")
+    print("✅ BART Loaded Successfully.")
+    
+    # Test generation
+    print(f"\n🔹 Testing BART generation with: {retrieved_text}")
+    inputs = tokenizer(retrieved_text, return_tensors="pt", max_length=1024, truncation=True)
+    summary_ids = bart_model.generate(**inputs)
+    generated_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    print(f"✅ Generated Text: {generated_text}")
+    
+    print("\n🎉 Pipeline is working correctly! 🚀")
+
+def test_advanced_rag():
+    print("\n🧪 Testing AdvancedRAG Implementation...")
+    
+    # Initialize RAG
+    print("\n🔹 Initializing AdvancedRAG...")
+    rag = AdvancedRAG()
+    print("✅ AdvancedRAG Initialized Successfully.")
+    
+    # Test knowledge addition
+    print("\n🔹 Adding knowledge to the system...")
+    knowledge = [
+        ("Python is a high-level programming language.", {"type": "programming", "topic": "python"}),
+        ("Python is a non-venomous snake found in Asia.", {"type": "animal", "topic": "python"}),
+        ("Machine learning is a subset of artificial intelligence.", {"type": "AI", "topic": "ML"})
+    ]
+    
+    for text, metadata in knowledge:
+        rag.add_to_knowledge_base(text, metadata)
+    print(f"✅ Added {len(knowledge)} pieces of knowledge with metadata.")
+    
+    # Test ambiguous query
+    print("\n🔹 Testing ambiguous query handling...")
+    query = "Tell me about Python"
+    response, context, metrics = rag.process_query(query)
+    
+    print("\nQuery:", query)
+    print("\nContext used:")
+    for i, text in enumerate(context):
+        print(f"{i+1}. {text}")
+    print("\nResponse:", response)
+    print("\nMetrics:", metrics)
+    
+    # Test performance metrics
+    print("\n🔹 Checking performance metrics...")
+    assert len(metrics) > 0, "Metrics should not be empty"
+    print("✅ Performance metrics are being tracked.")
+    
+    print("\n🎉 AdvancedRAG tests completed successfully! 🚀")
+
+if __name__ == "__main__":
+    # Test basic pipeline
+    test_sbert_faiss_bart_pipeline()
+    
+    # Test AdvancedRAG implementation
+    test_advanced_rag()
