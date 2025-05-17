@@ -1,0 +1,11 @@
+arxiv:
+  categories:
+  - cs.AI
+  - cs.LG
+  - cs.CL
+  max_results: 10
+rss_feeds:
+  feeds:
+  - https://arxiv.org/rss/cs.AI
+  - https://arxiv.org/rss/cs.LG
+  update_interval: 3600

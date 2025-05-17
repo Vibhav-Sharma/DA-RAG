@@ -77,8 +77,22 @@ class ResponseGenerator:
         """
         start_time = time.time()
         
-        # Build prompt with context
-        context_text = " ".join(context)
+        # Validate and clean context
+        cleaned_context = []
+        for ctx in context:
+            if isinstance(ctx, str):
+                # Remove any non-printable characters and normalize whitespace
+                cleaned = ''.join(char for char in ctx if char.isprintable())
+                cleaned = ' '.join(cleaned.split())
+                if cleaned:  # Only add non-empty strings
+                    cleaned_context.append(cleaned)
+        
+        if not cleaned_context:
+            self.logger.warning("No valid context found after cleaning")
+            return "I apologize, but I couldn't find any valid context to answer your question. Could you please rephrase your query or provide more specific information?"
+        
+        # Build prompt with cleaned context
+        context_text = " ".join(cleaned_context)
         
         # Add topic focus if provided
         topic_text = f" focusing specifically on {narrow_topic}" if narrow_topic else ""
@@ -94,28 +108,52 @@ Answer:"""
         # Track prompt length
         self.metrics['prompt_length'].append(len(prompt.split()))
         
-        # Tokenize input
-        inputs = self.tokenizer(prompt, return_tensors="pt", max_length=1024, truncation=True)
-        
-        # Generate response
-        output_ids = self.model.generate(
-            inputs["input_ids"],
-            max_length=256,
-            min_length=50,
-            num_beams=4,
-            length_penalty=2.0,
-            early_stopping=True
-        )
-        
-        response = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        
-        # Track metrics
-        gen_time = time.time() - start_time
-        self.metrics['generation_time'].append(gen_time)
-        self.metrics['response_length'].append(len(response.split()))
-        
-        self.logger.info(f"Response generated in {gen_time:.2f}s")
-        return response
+        try:
+            # Tokenize input with explicit encoding
+            inputs = self.tokenizer(
+                prompt,
+                return_tensors="pt",
+                max_length=1024,
+                truncation=True,
+                padding=True,
+                add_special_tokens=True
+            )
+            
+            # Generate response with more controlled parameters
+            output_ids = self.model.generate(
+                inputs["input_ids"],
+                max_length=256,
+                min_length=50,
+                num_beams=4,
+                length_penalty=2.0,
+                early_stopping=True,
+                no_repeat_ngram_size=3,
+                temperature=0.7,
+                top_k=50,
+                top_p=0.95
+            )
+            
+            # Decode with explicit handling of special tokens
+            response = self.tokenizer.decode(
+                output_ids[0],
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=True
+            )
+            
+            # Clean up the response
+            response = ' '.join(response.split())
+            
+            # Track metrics
+            gen_time = time.time() - start_time
+            self.metrics['generation_time'].append(gen_time)
+            self.metrics['response_length'].append(len(response.split()))
+            
+            self.logger.info(f"Response generated in {gen_time:.2f}s")
+            return response
+            
+        except Exception as e:
+            self.logger.error(f"Error generating response: {str(e)}")
+            return "I apologize, but I encountered an error while generating the response. Please try rephrasing your query."
     
     def generate_topic_focused_response(self, query: str, original_context: List[str], 
                                        focused_context: List[str], topic: str) -> str:

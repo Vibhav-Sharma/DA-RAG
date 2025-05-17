@@ -79,59 +79,88 @@ class DynamicRAGPipeline:
         """
         start_time = time.time()
         
+        # Clean and validate query
+        query = ' '.join(query.split())
+        if not query:
+            return {
+                "response_type": "error",
+                "error": "Empty query provided"
+            }
+        
         # Add query to conversation history
         self.conversation_history.append({"role": "user", "content": query})
         
-        # Identify potential broad topics
-        potential_topics = self.retriever.identify_broad_topic(query)
-        
-        # Retrieve initial context
-        initial_context = self.retriever.retrieve(query, k=3)
-        
-        result = {
-            "original_query": query,
-            "potential_topics": potential_topics,
-            "initial_context": initial_context
-        }
-        
-        # Decide if clarification is needed
-        if potential_topics and len(potential_topics) > 1:
-            # Multiple potential topics - generate clarification questions
-            self.clarification_needed = True
-            self.current_topic = potential_topics[0][0]  # Set the most likely topic
+        try:
+            # Identify potential broad topics
+            potential_topics = self.retriever.identify_broad_topic(query)
             
-            # Generate clarification questions for the most likely topic
-            clarification_questions = self.retriever.generate_clarification_questions(self.current_topic)
+            # Retrieve initial context
+            initial_context = self.retriever.retrieve(query, k=3)
             
-            # Generate clarification prompt
-            clarification_prompt = self.generator.generate_clarification_prompt(
-                query, potential_topics, clarification_questions
-            )
+            # Validate context
+            if not initial_context:
+                self.logger.warning("No context retrieved for query")
+                return {
+                    "response_type": "error",
+                    "error": "Could not find relevant context for your query. Please try rephrasing."
+                }
             
-            result["response_type"] = "clarification"
-            result["clarification_prompt"] = clarification_prompt
-            result["clarification_questions"] = clarification_questions
+            result = {
+                "original_query": query,
+                "potential_topics": potential_topics,
+                "initial_context": initial_context
+            }
             
-            # Add to conversation history
-            self.conversation_history.append({"role": "system", "content": clarification_prompt})
-        else:
-            # Clear topic or only one potential topic - generate response directly
-            self.clarification_needed = False
-            self.current_topic = potential_topics[0][0] if potential_topics else None
+            # Decide if clarification is needed
+            if potential_topics and len(potential_topics) > 1:
+                # Multiple potential topics - generate clarification questions
+                self.clarification_needed = True
+                self.current_topic = potential_topics[0][0]  # Set the most likely topic
+                
+                # Generate clarification questions for the most likely topic
+                clarification_questions = self.retriever.generate_clarification_questions(self.current_topic)
+                
+                # Generate clarification prompt
+                clarification_prompt = self.generator.generate_clarification_prompt(
+                    query, potential_topics, clarification_questions
+                )
+                
+                result["response_type"] = "clarification"
+                result["clarification_prompt"] = clarification_prompt
+                result["clarification_questions"] = clarification_questions
+                
+                # Add to conversation history
+                self.conversation_history.append({"role": "system", "content": clarification_prompt})
+            else:
+                # Clear topic or only one potential topic - generate response directly
+                self.clarification_needed = False
+                self.current_topic = potential_topics[0][0] if potential_topics else None
+                
+                # Generate initial response
+                response = self.generator.generate_response(query, initial_context)
+                
+                result["response_type"] = "answer"
+                result["response"] = response
+                result["context"] = initial_context  # Include context in response
+                
+                # Add to conversation history
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": response,
+                    "context": initial_context
+                })
             
-            # Generate initial response
-            response = self.generator.generate_response(query, initial_context)
+            # Track metrics
+            self.metrics['total_time'].append(time.time() - start_time)
             
-            result["response_type"] = "answer"
-            result["response"] = response
+            return result
             
-            # Add to conversation history
-            self.conversation_history.append({"role": "assistant", "content": response})
-        
-        # Track metrics
-        self.metrics['total_time'].append(time.time() - start_time)
-        
-        return result
+        except Exception as e:
+            self.logger.error(f"Error processing query: {str(e)}")
+            return {
+                "response_type": "error",
+                "error": "An error occurred while processing your query. Please try again."
+            }
     
     def process_clarification_response(self, user_response: str) -> Dict[str, Any]:
         """
@@ -145,63 +174,91 @@ class DynamicRAGPipeline:
         """
         start_time = time.time()
         
-        # Add to conversation history
-        self.conversation_history.append({"role": "user", "content": user_response})
+        # Clean and validate response
+        user_response = ' '.join(user_response.split())
+        if not user_response:
+            return {
+                "response_type": "error",
+                "error": "Empty clarification response provided"
+            }
         
-        # Analyze user response to identify the narrowed topic
-        original_query = self.conversation_history[-3]["content"]  # Get the original query
-        
-        # Combine original query with clarification response
-        combined_query = f"{original_query} {user_response}"
-        
-        # Re-identify topics with the combined query
-        topics = self.retriever.identify_broad_topic(combined_query)
-        
-        # Extract most likely narrow topic
-        if topics:
-            self.narrow_topic = topics[0][0]
-        else:
-            self.narrow_topic = self.current_topic  # Fallback to current topic
+        try:
+            # Add to conversation history
+            self.conversation_history.append({"role": "user", "content": user_response})
             
-        self.logger.info(f"Narrowed topic: {self.narrow_topic}")
-        
-        # Retrieve focused context for the narrow topic
-        focused_context = self.retriever.retrieve_for_narrow_topic(
-            combined_query, self.narrow_topic, k=3
-        )
-        
-        # Get initial context from the original query
-        original_context = []
-        for entry in self.conversation_history:
-            if "initial_context" in entry:
-                original_context = entry["initial_context"]
-                break
-        
-        # Generate focused response
-        response = self.generator.generate_topic_focused_response(
-            original_query, original_context, focused_context, self.narrow_topic
-        )
-        
-        # Reset clarification flag
-        self.clarification_needed = False
-        
-        result = {
-            "response_type": "answer",
-            "response": response,
-            "narrow_topic": self.narrow_topic,
-            "focused_context": focused_context
-        }
-        
-        # Add to conversation history
-        self.conversation_history.append({"role": "assistant", "content": response})
-        
-        # Track metrics
-        self.metrics['total_time'].append(time.time() - start_time)
-        self.metrics['clarification_rounds'].append(1)
-        if self.narrow_topic != self.current_topic:
-            self.metrics['topic_changes'].append(1)
-        
-        return result
+            # Analyze user response to identify the narrowed topic
+            original_query = self.conversation_history[-3]["content"]  # Get the original query
+            
+            # Combine original query with clarification response
+            combined_query = f"{original_query} {user_response}"
+            
+            # Re-identify topics with the combined query
+            topics = self.retriever.identify_broad_topic(combined_query)
+            
+            # Extract most likely narrow topic
+            if topics:
+                self.narrow_topic = topics[0][0]
+            else:
+                self.narrow_topic = self.current_topic  # Fallback to current topic
+                
+            self.logger.info(f"Narrowed topic: {self.narrow_topic}")
+            
+            # Retrieve focused context for the narrow topic
+            focused_context = self.retriever.retrieve_for_narrow_topic(
+                combined_query, self.narrow_topic, k=3
+            )
+            
+            # Validate focused context
+            if not focused_context:
+                self.logger.warning("No focused context retrieved")
+                return {
+                    "response_type": "error",
+                    "error": "Could not find relevant context for the narrowed topic. Please try a different clarification."
+                }
+            
+            # Get initial context from the original query
+            original_context = []
+            for entry in self.conversation_history:
+                if "context" in entry:
+                    original_context = entry["context"]
+                    break
+            
+            # Generate focused response
+            response = self.generator.generate_topic_focused_response(
+                original_query, original_context, focused_context, self.narrow_topic
+            )
+            
+            # Reset clarification flag
+            self.clarification_needed = False
+            
+            result = {
+                "response_type": "answer",
+                "response": response,
+                "narrow_topic": self.narrow_topic,
+                "context": focused_context  # Include context in response
+            }
+            
+            # Add to conversation history
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": response,
+                "context": focused_context
+            })
+            
+            # Track metrics
+            self.metrics['total_time'].append(time.time() - start_time)
+            self.metrics['clarification_rounds'].append(1)
+            if self.narrow_topic != self.current_topic:
+                self.metrics['topic_changes'].append(1)
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error processing clarification: {str(e)}")
+            return {
+                "response_type": "error",
+                "error": "An error occurred while processing your clarification. Please try again."
+            }
     
     def process_query(self, query: str) -> Dict[str, Any]:
         """
