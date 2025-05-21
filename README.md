@@ -9,6 +9,8 @@ DA-RAG is a system that improves response accuracy and efficiency by dynamically
 - **Semantic Search**: Uses FAISS and sentence embeddings for efficient similarity search
 - **Conversational Flow**: Maintains coherent conversation while refining topics
 - **Performance Monitoring**: Tracks retrieval and generation performance metrics
+- **Web Interface**: Interactive Flask-based web application for easy interaction
+- **Real-time Updates**: WebSocket support for dynamic conversation updates
 
 ## System Components
 
@@ -36,27 +38,96 @@ The DynamicRAGPipeline orchestrates the entire process:
 - Managing the conversation flow
 - Integrating retrieval and generation components
 
+### 4. Web Application (`app.py`)
+
+The Flask web application provides:
+- Interactive web interface for querying the system
+- Real-time conversation updates via WebSocket
+- Dynamic topic visualization
+- User-friendly response presentation
+
 ## Requirements
 
+### Core Dependencies
 - Python 3.8+
-- PyTorch
-- Transformers
-- FAISS
-- Sentence-Transformers
+- PyTorch >= 2.0.0
+- Transformers >= 4.30.0
+- FAISS-CPU >= 1.7.4
+- Sentence-Transformers >= 2.2.2
+- NumPy >= 1.24.0
+- Pandas >= 2.0.0
+- Scikit-learn >= 1.6.1
+
+### Web Application Dependencies
+- Flask == 3.0.2
+- Flask-WTF == 1.2.1
+- Flask-SocketIO == 5.3.6
+- python-socketio == 5.11.1
+- python-engineio == 4.9.1
+- Werkzeug == 3.0.1
+
+### Additional Dependencies
+- python-dotenv >= 1.0.0
+- SQLAlchemy >= 2.0.0
+- requests >= 2.31.0
+- wikipedia >= 1.4.0
+- newsapi-python >= 0.2.7
+- arxiv >= 1.4.8
+- scholarly >= 1.7.11
 
 ## Installation
 
+1. Clone the repository:
 ```bash
-# Clone the repository
 git clone https://github.com/yourusername/DA-RAG.git
 cd DA-RAG
+```
 
-# Install dependencies
+2. Create and activate a virtual environment:
+```bash
+# Windows
+python -m venv venv
+.\venv\Scripts\activate
+
+# Linux/MacOS
+python -m venv venv
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage Example
+4. Set up environment variables:
+Create a `.env` file in the project root with the following variables:
+```
+OPENAI_API_KEY=your_api_key_here
+NEWS_API_KEY=your_news_api_key_here
+DATABASE_URL=your_database_url_here
+```
 
+## Running the Application
+
+1. Start the Flask web application:
+```bash
+python app.py
+```
+
+2. Access the web interface at `http://localhost:5000`
+
+## Usage
+
+### Web Interface
+1. Open your web browser and navigate to `http://localhost:5000`
+2. Enter your query in the search box
+3. The system will:
+   - Process your initial query
+   - Ask clarification questions if needed
+   - Provide focused responses based on the narrowed topic
+4. View the conversation history and topic hierarchy in real-time
+
+### Python API
 ```python
 from src.pipeline import DynamicRAGPipeline
 from config import TOPIC_HIERARCHIES
@@ -80,8 +151,15 @@ rag_pipeline.add_knowledge(documents, topics)
 # Add topic hierarchies for narrowing
 rag_pipeline.add_topic_hierarchies(TOPIC_HIERARCHIES)
 
-# Process an initial query
+# Process a query
 result = rag_pipeline.process_query("Tell me about Python")
 print(result)
-# This will generate clarification questions to determine if the user
-#
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
