@@ -2,300 +2,186 @@ from typing import List, Dict, Tuple, Optional, Any
 import logging
 import time
 from .retriever import DynamicRetriever
-from .generator import ResponseGenerator
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import torch
+import numpy as np
+
+logger = logging.getLogger(__name__)
 
 class DynamicRAGPipeline:
     """
     Complete pipeline for Dynamic Retrieval-Augmented Generation,
-    combining topic narrowing, dynamic retrieval, and response generation.
+    combining Wikipedia-based retrieval, topic narrowing, and response generation.
     """
     
-    def __init__(self, 
-                retriever_model: str = "facebook-dpr-ctx_encoder-single-nq-base",
-                generator_model: str = "facebook/bart-large"):
-        """
-        Initialize the DA-RAG pipeline.
+    def __init__(self):
+        """Initialize the pipeline with retriever and generator models."""
+        logger.info("Initializing DynamicRAGPipeline")
         
-        Args:
-            retriever_model: Model for the retriever
-            generator_model: Model for the generator
-        """
-        # Setup logging
-        logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("Initializing Dynamic RAG Pipeline")
+        # Initialize retriever
+        self.retriever = DynamicRetriever()
         
-        # Initialize components
-        self.retriever = DynamicRetriever(model_name=retriever_model)
-        self.generator = ResponseGenerator(model_name=generator_model)
+        # Initialize generator model
+        model_name = "facebook/bart-large-cnn"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.generator = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         
-        # Conversation state
+        # Move model to GPU if available
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.generator.to(self.device)
+        
+        # Initialize conversation history
         self.conversation_history = []
-        self.current_topic = None
-        self.narrow_topic = None
-        self.clarification_needed = False
         
-        # Pipeline metrics
+        # Initialize metrics
         self.metrics = {
-            'total_time': [],
-            'clarification_rounds': [],
-            'topic_changes': []
+            'total_queries': 0,
+            'successful_queries': 0,
+            'failed_queries': 0,
+            'average_response_time': 0,
+            'wikipedia_fetch_times': [],
+            'generation_times': []
         }
+        
+        logger.info(f"DynamicRAGPipeline initialized successfully on {self.device}")
     
-    def add_knowledge(self, documents: List[str], topics: List[List[str]]) -> None:
-        """
-        Add documents to the knowledge base with topic labels.
-        
-        Args:
-            documents: List of document texts
-            topics: List of topic lists, one per document
-        """
-        assert len(documents) == len(topics), "Documents and topics must have the same length"
-        
-        for doc, doc_topics in zip(documents, topics):
-            self.retriever.add_document(doc, doc_topics)
-        
-        self.logger.info(f"Added {len(documents)} documents to knowledge base")
-    
-    def add_topic_hierarchies(self, hierarchies: Dict[str, List[str]]) -> None:
-        """
-        Add topic hierarchies for narrowing down topics.
-        
-        Args:
-            hierarchies: Dictionary mapping parent topics to subtopics
-        """
-        for parent, subtopics in hierarchies.items():
-            self.retriever.add_topic_hierarchy(parent, subtopics)
-    
-    def process_initial_query(self, query: str) -> Dict[str, Any]:
-        """
-        Process the initial user query, identify topics, and decide if clarification is needed.
-        
-        Args:
-            query: The user query
-            
-        Returns:
-            Dictionary with response type, potential topics, and clarification questions if needed
-        """
+    def process_query(self, query: str, max_retries: int = 2) -> Dict:
+        """Process a user query with improved error handling and retries."""
         start_time = time.time()
-        
-        # Clean and validate query
-        query = ' '.join(query.split())
-        if not query:
-            return {
-                "response_type": "error",
-                "error": "Empty query provided"
-            }
-        
-        # Add query to conversation history
-        self.conversation_history.append({"role": "user", "content": query})
+        self.metrics['total_queries'] += 1
         
         try:
-            # Identify potential broad topics
-            potential_topics = self.retriever.identify_broad_topic(query)
+            # Validate input
+            if not isinstance(query, str) or not query.strip():
+                raise ValueError("Query must be a non-empty string")
             
-            # Retrieve initial context
-            initial_context = self.retriever.retrieve(query, k=3)
+            # Clean and normalize query
+            query = query.strip()
+            logger.info(f"Processing query: {query}")
             
-            # Validate context
-            if not initial_context:
-                self.logger.warning("No context retrieved for query")
-                return {
-                    "response_type": "error",
-                    "error": "Could not find relevant context for your query. Please try rephrasing."
-                }
+            # Try to identify broad topic
+            broad_topics = self.retriever.identify_broad_topic(query)
+            if not broad_topics:
+                logger.warning("Could not identify broad topic")
             
-            result = {
-                "original_query": query,
-                "potential_topics": potential_topics,
-                "initial_context": initial_context
-            }
+            # Fetch relevant documents with retries
+            documents = []
+            for attempt in range(max_retries):
+                try:
+                    documents = self.retriever.fetch_wikipedia_data(query)
+                    if documents:
+                        break
+                    logger.warning(f"Attempt {attempt + 1}: No documents found")
+                except Exception as e:
+                    logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
+                    if attempt == max_retries - 1:
+                        raise
             
-            # Decide if clarification is needed
-            if potential_topics and len(potential_topics) > 1:
-                # Multiple potential topics - generate clarification questions
-                self.clarification_needed = True
-                self.current_topic = potential_topics[0][0]  # Set the most likely topic
-                
-                # Generate clarification questions for the most likely topic
-                clarification_questions = self.retriever.generate_clarification_questions(self.current_topic)
-                
-                # Generate clarification prompt
-                clarification_prompt = self.generator.generate_clarification_prompt(
-                    query, potential_topics, clarification_questions
-                )
-                
-                result["response_type"] = "clarification"
-                result["clarification_prompt"] = clarification_prompt
-                result["clarification_questions"] = clarification_questions
-                
-                # Add to conversation history
-                self.conversation_history.append({"role": "system", "content": clarification_prompt})
-            else:
-                # Clear topic or only one potential topic - generate response directly
-                self.clarification_needed = False
-                self.current_topic = potential_topics[0][0] if potential_topics else None
-                
-                # Generate initial response
-                response = self.generator.generate_response(query, initial_context)
-                
-                result["response_type"] = "answer"
-                result["response"] = response
-                result["context"] = initial_context  # Include context in response
-                
-                # Add to conversation history
-                self.conversation_history.append({
-                    "role": "assistant",
-                    "content": response,
-                    "context": initial_context
-                })
+            if not documents:
+                raise ValueError("No relevant documents found")
             
-            # Track metrics
-            self.metrics['total_time'].append(time.time() - start_time)
+            # Generate response
+            generation_start = time.time()
+            context = "\n".join([doc['summary'] for doc in documents])
+            response = self._generate_response(query, context)
+            generation_time = time.time() - generation_start
+            self.metrics['generation_times'].append(generation_time)
             
-            return result
+            # Prepare response with sources
+            sources = [{
+                'title': doc['title'],
+                'url': doc['url'],
+                'relevance_score': doc.get('relevance_score', 0.0)
+            } for doc in documents]
             
-        except Exception as e:
-            self.logger.error(f"Error processing query: {str(e)}")
-            return {
-                "response_type": "error",
-                "error": "An error occurred while processing your query. Please try again."
-            }
-    
-    def process_clarification_response(self, user_response: str) -> Dict[str, Any]:
-        """
-        Process user's response to clarification questions.
-        
-        Args:
-            user_response: User's response to clarification
-            
-        Returns:
-            Dictionary with response and context
-        """
-        start_time = time.time()
-        
-        # Clean and validate response
-        user_response = ' '.join(user_response.split())
-        if not user_response:
-            return {
-                "response_type": "error",
-                "error": "Empty clarification response provided"
-            }
-        
-        try:
-            # Add to conversation history
-            self.conversation_history.append({"role": "user", "content": user_response})
-            
-            # Analyze user response to identify the narrowed topic
-            original_query = self.conversation_history[-3]["content"]  # Get the original query
-            
-            # Combine original query with clarification response
-            combined_query = f"{original_query} {user_response}"
-            
-            # Re-identify topics with the combined query
-            topics = self.retriever.identify_broad_topic(combined_query)
-            
-            # Extract most likely narrow topic
-            if topics:
-                self.narrow_topic = topics[0][0]
-            else:
-                self.narrow_topic = self.current_topic  # Fallback to current topic
-                
-            self.logger.info(f"Narrowed topic: {self.narrow_topic}")
-            
-            # Retrieve focused context for the narrow topic
-            focused_context = self.retriever.retrieve_for_narrow_topic(
-                combined_query, self.narrow_topic, k=3
-            )
-            
-            # Validate focused context
-            if not focused_context:
-                self.logger.warning("No focused context retrieved")
-                return {
-                    "response_type": "error",
-                    "error": "Could not find relevant context for the narrowed topic. Please try a different clarification."
-                }
-            
-            # Get initial context from the original query
-            original_context = []
-            for entry in self.conversation_history:
-                if "context" in entry:
-                    original_context = entry["context"]
-                    break
-            
-            # Generate focused response
-            response = self.generator.generate_topic_focused_response(
-                original_query, original_context, focused_context, self.narrow_topic
-            )
-            
-            # Reset clarification flag
-            self.clarification_needed = False
-            
-            result = {
-                "response_type": "answer",
-                "response": response,
-                "narrow_topic": self.narrow_topic,
-                "context": focused_context  # Include context in response
-            }
-            
-            # Add to conversation history
+            # Update conversation history
             self.conversation_history.append({
-                "role": "assistant",
-                "content": response,
-                "context": focused_context
+                'query': query,
+                'response': response,
+                'sources': sources,
+                'timestamp': time.time()
             })
             
-            # Track metrics
-            self.metrics['total_time'].append(time.time() - start_time)
-            self.metrics['clarification_rounds'].append(1)
-            if self.narrow_topic != self.current_topic:
-                self.metrics['topic_changes'].append(1)
+            # Update metrics
+            self.metrics['successful_queries'] += 1
+            total_time = time.time() - start_time
+            self.metrics['average_response_time'] = (
+                (self.metrics['average_response_time'] * (self.metrics['successful_queries'] - 1) + total_time)
+                / self.metrics['successful_queries']
+            )
             
-            return result
+            return {
+                'response': response,
+                'sources': sources,
+                'metrics': {
+                    'response_time': total_time,
+                    'generation_time': generation_time,
+                    'wikipedia_fetch_time': self.retriever.metrics['wikipedia_fetch_time'][-1]
+                }
+            }
             
         except Exception as e:
-            self.logger.error(f"Error processing clarification: {str(e)}")
+            self.metrics['failed_queries'] += 1
+            logger.error(f"Error processing query: {str(e)}")
             return {
-                "response_type": "error",
-                "error": "An error occurred while processing your clarification. Please try again."
-            }
-    
-    def process_query(self, query: str) -> Dict[str, Any]:
-        """
-        Process a user query through the complete pipeline.
-        
-        Args:
-            query: The user query
-            
-        Returns:
-            Dictionary with response and context
-        """
-        # Check if we need a clarification response
-        if self.clarification_needed:
-            return self.process_clarification_response(query)
-        else:
-            return self.process_initial_query(query)
-    
-    def get_performance_metrics(self) -> Dict:
-        """Get combined performance metrics from all components"""
-        retriever_metrics = self.retriever.get_performance_metrics()
-        generator_metrics = self.generator.get_performance_metrics()
-        
-        # Calculate pipeline metrics
-        for key, values in self.metrics.items():
-            if values:
-                retriever_metrics[f"pipeline_{key}"] = {
-                    'avg': sum(values) / len(values),
-                    'max': max(values),
-                    'min': min(values),
-                    'count': len(values)
+                'error': str(e),
+                'response': "I apologize, but I encountered an error processing your query. Please try rephrasing it or ask about a different topic.",
+                'sources': [],
+                'metrics': {
+                    'response_time': time.time() - start_time,
+                    'error_type': type(e).__name__
                 }
-        
-        # Combine all metrics
-        metrics = {
-            "retriever": retriever_metrics,
-            "generator": generator_metrics,
-            "conversation_turns": len(self.conversation_history)
+            }
+
+    def _generate_response(self, query: str, context: str) -> str:
+        """Generate a response using the BART model with improved context handling."""
+        try:
+            # Prepare input
+            input_text = f"question: {query} context: {context}"
+            inputs = self.tokenizer(input_text, max_length=1024, truncation=True, return_tensors="pt")
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            
+            # Generate response
+            outputs = self.generator.generate(
+                **inputs,
+                max_length=150,
+                min_length=50,
+                num_beams=4,
+                length_penalty=2.0,
+                early_stopping=True
+            )
+            
+            # Decode and clean response
+            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response = response.strip()
+            
+            # Add source attribution
+            response += "\n\nThis information is from Wikipedia."
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error generating response: {str(e)}")
+            raise
+
+    def get_conversation_history(self, limit: Optional[int] = None) -> List[Dict]:
+        """Get conversation history with optional limit."""
+        if limit is None:
+            return self.conversation_history
+        return self.conversation_history[-limit:]
+
+    def get_metrics(self) -> Dict:
+        """Get current performance metrics."""
+        return {
+            'total_queries': self.metrics['total_queries'],
+            'successful_queries': self.metrics['successful_queries'],
+            'failed_queries': self.metrics['failed_queries'],
+            'success_rate': (self.metrics['successful_queries'] / self.metrics['total_queries'] * 100 
+                           if self.metrics['total_queries'] > 0 else 0),
+            'average_response_time': self.metrics['average_response_time'],
+            'average_generation_time': (sum(self.metrics['generation_times']) / len(self.metrics['generation_times'])
+                                      if self.metrics['generation_times'] else 0),
+            'average_wikipedia_fetch_time': (sum(self.retriever.metrics['wikipedia_fetch_time']) 
+                                           / len(self.retriever.metrics['wikipedia_fetch_time'])
+                                           if self.retriever.metrics['wikipedia_fetch_time'] else 0)
         }
-        
-        return metrics
