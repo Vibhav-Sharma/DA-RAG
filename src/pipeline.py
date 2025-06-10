@@ -64,6 +64,17 @@ class DynamicRAGPipeline:
             if not broad_topics:
                 logger.warning("Could not identify broad topic")
             
+            # After identifying broad topics
+            if len(broad_topics) > 1:
+                clarification_questions = self.retriever.generate_clarification_questions(broad_topics[0][0])
+                prompt = self.generator.generate_clarification_prompt(query, broad_topics, clarification_questions)
+                return {
+                    'response': prompt,
+                    'clarification_needed': True,
+                    'topics': broad_topics,
+                    'questions': clarification_questions
+                }
+
             # Fetch relevant documents with retries
             documents = []
             for attempt in range(max_retries):

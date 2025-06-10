@@ -14344,3 +14344,90 @@ Writing
 2025-05-29 00:23:43,122 - src.pipeline - ERROR - Error processing query: No relevant documents found
 2025-05-29 00:23:43,122 - __main__ - INFO - Query processed in 0.01s
 2025-05-29 00:23:43,123 - werkzeug - INFO - 127.0.0.1 - - [29/May/2025 00:23:43] "POST /api/query HTTP/1.1" 200 -
+2025-05-29 01:05:48,754 - werkzeug - INFO -  * Detected change in 'C:\\Users\\vibha\\OneDrive\\Documents\\Playground\\DA-RAG-Project\\src\\retriever.py', reloading
+2025-05-29 01:05:51,340 - werkzeug - INFO -  * Restarting with stat
+2025-05-29 01:06:01,571 - src.pipeline - INFO - Initializing DynamicRAGPipeline
+2025-05-29 01:06:01,571 - src.retriever - INFO - Initializing DynamicRetriever with model: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:06:01,575 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-05-29 01:06:01,576 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:06:01,578 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2025-05-29 01:06:03,068 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:06:03,349 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-05-29 01:06:03,625 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/README.md HTTP/1.1" 200 0
+2025-05-29 01:06:03,900 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:06:04,192 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/sentence_bert_config.json HTTP/1.1" 200 0
+2025-05-29 01:06:04,501 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2025-05-29 01:06:04,866 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:06:05,746 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+2025-05-29 01:06:06,074 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/revision/main HTTP/1.1" 200 2590
+2025-05-29 01:06:06,397 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base HTTP/1.1" 200 2590
+2025-05-29 01:06:06,402 - src.retriever - INFO - DynamicRetriever initialized successfully
+2025-05-29 01:06:06,693 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:06:06,978 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:06:07,309 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:06:07,713 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/vocab.json HTTP/1.1" 200 0
+2025-05-29 01:06:08,224 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:06:13,506 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/generation_config.json HTTP/1.1" 200 0
+2025-05-29 01:06:13,554 - src.pipeline - INFO - DynamicRAGPipeline initialized successfully on cpu
+2025-05-29 01:06:13,555 - __main__ - INFO - Pipeline initialized successfully
+2025-05-29 01:06:13,568 - __main__ - INFO - Starting Flask application
+2025-05-29 01:06:13,685 - werkzeug - WARNING -  * Debugger is active!
+2025-05-29 01:06:13,722 - werkzeug - INFO -  * Debugger PIN: 639-442-203
+2025-05-29 01:10:29,188 - werkzeug - INFO -  * Detected change in 'C:\\Users\\vibha\\OneDrive\\Documents\\Playground\\DA-RAG-Project\\src\\retriever.py', reloading
+2025-05-29 01:10:31,363 - werkzeug - INFO -  * Restarting with stat
+2025-05-29 01:10:44,261 - src.pipeline - INFO - Initializing DynamicRAGPipeline
+2025-05-29 01:10:44,261 - src.retriever - INFO - Initializing DynamicRetriever with model: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:10:44,267 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-05-29 01:10:44,267 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:10:44,270 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2025-05-29 01:10:45,182 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:10:45,903 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-05-29 01:10:46,629 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/README.md HTTP/1.1" 200 0
+2025-05-29 01:10:46,949 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:10:47,763 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/sentence_bert_config.json HTTP/1.1" 200 0
+2025-05-29 01:10:48,034 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2025-05-29 01:10:48,307 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:10:49,179 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+2025-05-29 01:10:49,554 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/revision/main HTTP/1.1" 200 2590
+2025-05-29 01:10:49,870 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base HTTP/1.1" 200 2590
+2025-05-29 01:10:49,877 - src.retriever - INFO - DynamicRetriever initialized successfully
+2025-05-29 01:10:50,158 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:10:50,434 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:10:50,733 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:10:51,009 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/vocab.json HTTP/1.1" 200 0
+2025-05-29 01:10:51,480 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:10:56,042 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/generation_config.json HTTP/1.1" 200 0
+2025-05-29 01:10:56,067 - src.pipeline - INFO - DynamicRAGPipeline initialized successfully on cpu
+2025-05-29 01:10:56,068 - __main__ - INFO - Pipeline initialized successfully
+2025-05-29 01:10:56,074 - __main__ - INFO - Starting Flask application
+2025-05-29 01:10:56,114 - werkzeug - WARNING -  * Debugger is active!
+2025-05-29 01:10:56,136 - werkzeug - INFO -  * Debugger PIN: 639-442-203
+2025-05-29 01:14:07,947 - werkzeug - INFO -  * Detected change in 'C:\\Users\\vibha\\OneDrive\\Documents\\Playground\\DA-RAG-Project\\src\\retriever.py', reloading
+2025-05-29 01:14:09,759 - werkzeug - INFO -  * Restarting with stat
+2025-05-29 01:14:23,103 - src.pipeline - INFO - Initializing DynamicRAGPipeline
+2025-05-29 01:14:23,104 - src.retriever - INFO - Initializing DynamicRetriever with model: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:14:23,109 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-05-29 01:14:23,109 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: facebook-dpr-ctx_encoder-single-nq-base
+2025-05-29 01:14:23,112 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2025-05-29 01:14:25,010 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:14:25,693 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config_sentence_transformers.json HTTP/1.1" 200 0
+2025-05-29 01:14:25,969 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/README.md HTTP/1.1" 200 0
+2025-05-29 01:14:26,228 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/modules.json HTTP/1.1" 200 0
+2025-05-29 01:14:26,960 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/sentence_bert_config.json HTTP/1.1" 200 0
+2025-05-29 01:14:27,307 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/adapter_config.json HTTP/1.1" 404 0
+2025-05-29 01:14:27,583 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:14:28,449 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+2025-05-29 01:14:28,798 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base/revision/main HTTP/1.1" 200 2590
+2025-05-29 01:14:29,070 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/facebook-dpr-ctx_encoder-single-nq-base HTTP/1.1" 200 2590
+2025-05-29 01:14:29,076 - src.retriever - INFO - DynamicRetriever initialized successfully
+2025-05-29 01:14:29,351 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:14:29,615 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:14:29,922 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/tokenizer_config.json HTTP/1.1" 404 0
+2025-05-29 01:14:30,200 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/vocab.json HTTP/1.1" 200 0
+2025-05-29 01:14:30,704 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/config.json HTTP/1.1" 200 0
+2025-05-29 01:14:35,543 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /facebook/bart-large-cnn/resolve/main/generation_config.json HTTP/1.1" 200 0
+2025-05-29 01:14:35,567 - src.pipeline - INFO - DynamicRAGPipeline initialized successfully on cpu
+2025-05-29 01:14:35,567 - __main__ - INFO - Pipeline initialized successfully
+2025-05-29 01:14:35,577 - __main__ - INFO - Starting Flask application
+2025-05-29 01:14:35,616 - werkzeug - WARNING -  * Debugger is active!
+2025-05-29 01:14:35,631 - werkzeug - INFO -  * Debugger PIN: 639-442-203

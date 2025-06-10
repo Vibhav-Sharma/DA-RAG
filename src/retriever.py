@@ -14,6 +14,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import json
 import os
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class DynamicRetriever:
         
         # Set up Wikipedia API
         wikipedia.set_lang("en")
-        wikipedia.set_rate_limiting(True, min_wait=0.5)
+        wikipedia.set_rate_limiting(True, min_wait=timedelta(seconds=0.5))
         
         # Initialize cache directory
         self.cache_dir = os.path.join(os.path.dirname(__file__), '..', 'cache')
@@ -109,11 +110,11 @@ class DynamicRetriever:
         results = []
         
         try:
-            # First try to get from cache
-            cached_result = self._get_cached_page(query)
-            if cached_result:
-                logger.info(f"Retrieved {query} from cache")
-                return cached_result
+            # Temporarily disable cache check
+            # cached_result = self._get_cached_page(query)
+            # if cached_result:
+            #     logger.info(f"Retrieved {query} from cache")
+            #     return cached_result
 
             # Search Wikipedia
             search_results = wikipedia.search(query, results=max_pages)
@@ -151,7 +152,8 @@ class DynamicRetriever:
                         'content': page.content,
                         'topics': self._extract_topics(page.content)
                     }
-                    self._cache_page(page.title, page_data)
+                    # Temporarily disable caching
+                    # self._cache_page(page.title, page_data)
                     results.append(page_data)
                     
                 except wikipedia.exceptions.DisambiguationError as e:
@@ -168,7 +170,8 @@ class DynamicRetriever:
                                 'content': page.content,
                                 'topics': self._extract_topics(page.content)
                             }
-                            self._cache_page(page.title, page_data)
+                            # Temporarily disable caching
+                            # self._cache_page(page.title, page_data)
                             results.append(page_data)
                         except Exception as e:
                             logger.warning(f"Error fetching disambiguated page {selected_title}: {str(e)}")
@@ -376,14 +379,35 @@ class DynamicRetriever:
     def get_performance_metrics(self) -> Dict:
         """Get the average performance metrics"""
         metrics = {}
+        
+        # Calculate averages and counts for each metric
         for key, values in self.metrics.items():
             if values:
-                metrics[key] = {
-                    'avg': sum(values) / len(values),
-                    'max': max(values),
-                    'min': min(values),
-                    'count': len(values)
-                }
+                # Ensure values are treated as floats for summation and averaging
+                float_values = [float(v) for v in values if isinstance(v, (int, float))]
+                if float_values:
+                    metrics[f'avg_{key}'] = sum(float_values) / len(float_values)
+                    metrics[f'max_{key}'] = max(float_values)
+                    metrics[f'count_{key}'] = len(float_values)
+                else:
+                     metrics[f'avg_{key}'] = 0.0
+                     metrics[f'max_{key}'] = 0.0
+                     metrics[f'count_{key}'] = 0
             else:
-                metrics[key] = {'avg': 0, 'max': 0, 'min': 0, 'count': 0}
+                metrics[f'avg_{key}'] = 0.0
+                metrics[f'max_{key}'] = 0.0
+                metrics[f'count_{key}'] = 0
+        
+        # Add overall query counts and rates
+        # Assuming these are handled in the pipeline now, but keeping here for completeness if needed
+        # total_queries = self.metrics.get('total_queries', 0)
+        # successful_queries = self.metrics.get('successful_queries', 0)
+        # failed_queries = self.metrics.get('failed_queries', 0)
+        #
+        # metrics['total_queries'] = total_queries
+        # metrics['successful_queries'] = successful_queries
+        # metrics['failed_queries'] = failed_queries
+        # metrics['success_rate'] = (successful_queries / total_queries * 100 if total_queries > 0 else 0)
+
+
         return metrics
