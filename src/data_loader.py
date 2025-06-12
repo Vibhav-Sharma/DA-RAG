@@ -67,7 +67,7 @@ class DataLoader:
                         # Get page content
                         page = wikipedia.page(page_title)
                         articles.append({
-                            'text': page.content,
+                            'content': page.content,
                             'source': 'wikipedia',
                             'metadata': {
                                 'title': page.title,
@@ -109,7 +109,7 @@ class DataLoader:
             articles = []
             for article in response['articles']:
                 articles.append({
-                    'text': f"{article['title']}\n{article['description']}\n{article['content']}",
+                    'content': f"{article['title']}\n{article['description']}\n{article['content']}",
                     'source': 'newsapi',
                     'metadata': {
                         'title': article['title'],
@@ -138,7 +138,7 @@ class DataLoader:
                     metadata = {col: row[col] for col in metadata_columns if col in row}
                 
                 articles.append({
-                    'text': str(row[text_column]),
+                    'content': str(row[text_column]),
                     'source': 'csv',
                     'metadata': metadata
                 })
@@ -160,7 +160,7 @@ class DataLoader:
             INSERT INTO knowledge (text, source, metadata)
             VALUES (?, ?, ?)
             ''', (
-                article['text'],
+                article['content'],
                 article['source'],
                 json.dumps(article['metadata'])
             ))
@@ -184,7 +184,7 @@ class DataLoader:
         articles = []
         for row in cursor.fetchall():
             articles.append({
-                'text': row[0],
+                'content': row[0],
                 'source': row[1],
                 'metadata': json.loads(row[2]),
                 'timestamp': row[3]
