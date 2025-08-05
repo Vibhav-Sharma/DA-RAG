@@ -16,7 +16,8 @@ This project implements a **Dynamic Retrieval-Augmented Generation (RAG)** syste
 > **Clarification Mechanism:** Based on Wikipedia topic headings  
 > **Comparison Models:** t5-base, flan-t5-base
 
-![Architecture Diagram]![Uploading ChatGPT Image Aug 5, 2025, 08_49_15 PM.png…]()
+<img width="1536" height="1024" alt="ChatGPT Image Aug 5, 2025, 08_49_15 PM" src="https://github.com/user-attachments/assets/8f1d38a6-1f26-4719-87c8-3cc04868d27c" />
+
 
 
 ---
@@ -32,16 +33,13 @@ This project implements a **Dynamic Retrieval-Augmented Generation (RAG)** syste
 
 ## 📈 Model Evaluation
 
-### 🔬 Average Generation Time (seconds)
-![Generation Time Graph]![WhatsApp Image 2025-07-23 at 22 45 37_d636adb6](https://github.com/user-attachments/assets/fd33c51e-db69-4391-bf27-a4c22749c0f8)
+### 🔬 Average Generation Time (seconds)(https://github.com/user-attachments/assets/fd33c51e-db69-4391-bf27-a4c22749c0f8)
 
 
-### 🧪 ROUGE-L Score Comparison
-![ROUGE Score Graph]![WhatsApp Image 2025-07-23 at 22 45 50_46ac1665](https://github.com/user-attachments/assets/78318013-dfeb-4b5d-ad74-151d2aadef1f)
+### 🧪 ROUGE-L Score Comparison(https://github.com/user-attachments/assets/78318013-dfeb-4b5d-ad74-151d2aadef1f)
 
 
-### 🔤 BLEU Score Comparison
-![BLEU Score Graph]![WhatsApp Image 2025-07-23 at 23 19 03_704487c3](https://github.com/user-attachments/assets/3f31652e-863a-40d6-a18c-aafd4999a9c5)
+### 🔤 BLEU Score Comparison(https://github.com/user-attachments/assets/3f31652e-863a-40d6-a18c-aafd4999a9c5)
 
 
 
