@@ -25,20 +25,28 @@ class DynamicRAGPipeline:
             'wikipedia_fetch_times': [],
             'generation_times': []
         }
-        logger.info(f"DynamicRAGPipeline initialized successfully on {self.device}")
+        logger.info(f"DynamicRAGPipeline initialized on {self.device}")
 
-    def process_query(self, query: str, max_retries: int = 2) -> Dict:
+    def process_query(self, query: str, clarification_topic: Optional[str] = None) -> Dict:
         start_time = time.time()
         self.metrics['total_queries'] += 1
 
         try:
             query = query.strip()
-            documents = self.retriever.fetch_wikipedia_data(query)
+
+            documents = self.retriever.fetch_wikipedia_data(
+                query,
+                filter_topic=clarification_topic
+            )
+
             if not documents:
                 raise ValueError("No relevant documents found")
 
-            topics = documents[0].get("topics", [])
-            if topics:
+            top_doc = documents[0]
+            topics = [t for t in top_doc.get("topics", []) if t.lower() not in
+                      ['references', 'see also', 'notes', 'sources', 'further reading', 'external links']]
+
+            if topics and clarification_topic is None:
                 clarification_questions = self.retriever.generate_clarification_questions(topics[0])
                 return {
                     'response': f"Can you clarify what exactly you're asking about in: {topics[0]}?",
@@ -53,11 +61,7 @@ class DynamicRAGPipeline:
             generation_time = time.time() - generation_start
             self.metrics['generation_times'].append(generation_time)
 
-            sources = [{
-                'title': doc.get('title', ''),
-                'url': doc.get('url', ''),
-                'relevance_score': doc.get('relevance_score', 0.0)
-            } for doc in documents]
+            sources = [{'title': doc['title'], 'url': doc['url']} for doc in documents]
 
             self.conversation_history.append({
                 'query': query,
@@ -66,8 +70,8 @@ class DynamicRAGPipeline:
                 'timestamp': time.time()
             })
 
-            self.metrics['successful_queries'] += 1
             total_time = time.time() - start_time
+            self.metrics['successful_queries'] += 1
             self.metrics['average_response_time'] = (
                 (self.metrics['average_response_time'] * (self.metrics['successful_queries'] - 1) + total_time)
                 / self.metrics['successful_queries']
@@ -88,8 +92,7 @@ class DynamicRAGPipeline:
             logger.error(f"Error processing query: {str(e)}")
             return {
                 'error': str(e),
-                'response': "I apologize, but I encountered an error processing your query. Please try rephrasing it or ask about a different topic.",
-                'sources': [],
+                'response': "Sorry, I couldn't process your query.",
                 'metrics': {
                     'response_time': time.time() - start_time,
                     'error_type': type(e).__name__
