@@ -1,165 +1,89 @@
-# DA-RAG: Dynamic Retrieval-Augmented Generation
+# 📚 Dynamic Wikipedia-RAG System using BART + Wikipedia + Topic-Aware Clarification
 
-DA-RAG is a system that improves response accuracy and efficiency by dynamically narrowing down topics after a user submits a query. The system first identifies broader topics, asks clarifying questions, and then retrieves and generates targeted responses based on the narrowed-down topic.
+This project implements a **Dynamic Retrieval-Augmented Generation (RAG)** system that:
+- Retrieves Wikipedia data dynamically based on user queries
+- Extracts topic headings for clarification
+- Allows follow-up responses based on subtopics
+- Generates context-aware answers using `facebook/bart-large-cnn`
 
-## Key Features
+---
 
-- **Dynamic Topic Narrowing**: Automatically narrows down broad topics through clarification questions
-- **Targeted Knowledge Retrieval**: Retrieves information relevant only to the specified topic
-- **Semantic Search**: Uses FAISS and sentence embeddings for efficient similarity search
-- **Conversational Flow**: Maintains coherent conversation while refining topics
-- **Performance Monitoring**: Tracks retrieval and generation performance metrics
-- **Web Interface**: Interactive Flask-based web application for easy interaction
-- **Real-time Updates**: WebSocket support for dynamic conversation updates
+## 🔧 Architecture Overview
 
-## System Components
+> **Model:** SentenceTransformer for embedding retrieval  
+> **Retriever:** Dynamic Wikipedia fetch with topic-based filtering  
+> **Generator:** BART (facebook/bart-large-cnn)  
+> **Clarification Mechanism:** Based on Wikipedia topic headings  
+> **Comparison Models:** t5-base, flan-t5-base
 
-### 1. Retriever (`retriever.py`)
+![Architecture Diagram]![Uploading ChatGPT Image Aug 5, 2025, 08_49_15 PM.png…]()
 
-The DynamicRetriever is responsible for:
-- Identifying broad topics from user queries
-- Organizing knowledge by topic hierarchies
-- Retrieving relevant documents using FAISS similarity search
-- Generating clarification questions to narrow down topics
 
-### 2. Generator (`generator.py`)
+---
 
-The ResponseGenerator handles:
-- Generating responses based on retrieved context
-- Creating clarification prompts to narrow down topics
-- Producing focused responses for specific topics
-- Tracking generation metrics
+## 📌 Features
 
-### 3. Pipeline (`pipeline.py`)
+- 🔍 Wikipedia-powered semantic document retriever  
+- 🧠 Sub-topic clarification before generation  
+- ✏️ Follow-up refinement using subtopic index  
+- 📊 Evaluation & benchmarking with ROUGE, BLEU, BERTScore, METEOR
 
-The DynamicRAGPipeline orchestrates the entire process:
-- Processing initial queries and identifying topics
-- Deciding when clarification is needed
-- Managing the conversation flow
-- Integrating retrieval and generation components
+---
 
-### 4. Web Application (`app.py`)
+## 📈 Model Evaluation
 
-The Flask web application provides:
-- Interactive web interface for querying the system
-- Real-time conversation updates via WebSocket
-- Dynamic topic visualization
-- User-friendly response presentation
+### 🔬 Average Generation Time (seconds)
+![Generation Time Graph]![WhatsApp Image 2025-07-23 at 22 45 37_d636adb6](https://github.com/user-attachments/assets/fd33c51e-db69-4391-bf27-a4c22749c0f8)
 
-## Requirements
 
-### Core Dependencies
-- Python 3.8+
-- PyTorch >= 2.0.0
-- Transformers >= 4.30.0
-- FAISS-CPU >= 1.7.4
-- Sentence-Transformers >= 2.2.2
-- NumPy >= 1.24.0
-- Pandas >= 2.0.0
-- Scikit-learn >= 1.6.1
+### 🧪 ROUGE-L Score Comparison
+![ROUGE Score Graph]![WhatsApp Image 2025-07-23 at 22 45 50_46ac1665](https://github.com/user-attachments/assets/78318013-dfeb-4b5d-ad74-151d2aadef1f)
 
-### Web Application Dependencies
-- Flask == 3.0.2
-- Flask-WTF == 1.2.1
-- Flask-SocketIO == 5.3.6
-- python-socketio == 5.11.1
-- python-engineio == 4.9.1
-- Werkzeug == 3.0.1
 
-### Additional Dependencies
-- python-dotenv >= 1.0.0
-- SQLAlchemy >= 2.0.0
-- requests >= 2.31.0
-- wikipedia >= 1.4.0
-- newsapi-python >= 0.2.7
-- arxiv >= 1.4.8
-- scholarly >= 1.7.11
+### 🔤 BLEU Score Comparison
+![BLEU Score Graph]![WhatsApp Image 2025-07-23 at 23 19 03_704487c3](https://github.com/user-attachments/assets/3f31652e-863a-40d6-a18c-aafd4999a9c5)
 
-## Installation
 
-1. Clone the repository:
+
+---
+
+## 📊 Metric Table
+
+| Metric       | facebook/bart-large-cnn | t5-base | flan-t5-base |
+|--------------|--------------------------|---------|--------------|
+| ROUGE-1      | 0.6285                   | 0.3889  | 0.3428       |
+| ROUGE-2      | 0.4242                   | 0.0588  | 0.1212       |
+| ROUGE-L      | 0.6285                   | 0.2777  | 0.2857       |
+| BLEU         | 0.83xx                   | ~0      | ~0           |
+| BERTScore F1 | 0.4393                   | 0.1220  | 0.0260       |
+| Time (s)     | 25.3                     | 11.6    | 8.4          |
+
+---
+
+## 🧩 Use Case Flow
+
+1. **User inputs a vague query**
+2. **System fetches Wikipedia pages and extracts topics**
+3. **Clarification is prompted from the user (optional)**
+4. **Sub-topic index input triggers refined query**
+5. **Response generated from selected model**
+6. **Metrics logged and compared**
+
+---
+
+## 🧪 Future Scope
+
+- [ ] Add support for PDF/Text file sources  
+- [ ] Add LoRA-based model compression  
+- [ ] Multi-model switch for user control  
+- [ ] Live chat with response streaming  
+
+---
+
+## 📂 Run Locally
+
 ```bash
-git clone https://github.com/yourusername/DA-RAG.git
-cd DA-RAG
-```
-
-2. Create and activate a virtual environment:
-```bash
-# Windows
-python -m venv venv
-.\venv\Scripts\activate
-
-# Linux/MacOS
-python -m venv venv
-source venv/bin/activate
-```
-
-3. Install dependencies:
-```bash
+git clone https://github.com/yourrepo/wiki-rag
+cd wiki-rag
 pip install -r requirements.txt
-```
-
-4. Set up environment variables:
-Create a `.env` file in the project root with the following variables:
-```
-OPENAI_API_KEY=your_api_key_here
-NEWS_API_KEY=your_news_api_key_here
-DATABASE_URL=your_database_url_here
-```
-
-## Running the Application
-
-1. Start the Flask web application:
-```bash
 python app.py
-```
-
-2. Access the web interface at `http://localhost:5000`
-
-## Usage
-
-### Web Interface
-1. Open your web browser and navigate to `http://localhost:5000`
-2. Enter your query in the search box
-3. The system will:
-   - Process your initial query
-   - Ask clarification questions if needed
-   - Provide focused responses based on the narrowed topic
-4. View the conversation history and topic hierarchy in real-time
-
-### Python API
-```python
-from src.pipeline import DynamicRAGPipeline
-from config import TOPIC_HIERARCHIES
-
-# Initialize the pipeline
-rag_pipeline = DynamicRAGPipeline()
-
-# Add knowledge with topic labels
-documents = [
-    "Python is a high-level programming language often used for web development.",
-    "Python snakes are non-venomous constrictors found in Africa and Asia.",
-    "Machine learning models require large datasets for training."
-]
-topics = [
-    ["python programming", "programming languages"],
-    ["python snake", "reptiles", "animals"],
-    ["machine learning", "artificial intelligence", "data science"]
-]
-rag_pipeline.add_knowledge(documents, topics)
-
-# Add topic hierarchies for narrowing
-rag_pipeline.add_topic_hierarchies(TOPIC_HIERARCHIES)
-
-# Process a query
-result = rag_pipeline.process_query("Tell me about Python")
-print(result)
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
