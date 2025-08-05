@@ -33,13 +33,13 @@ This project implements a **Dynamic Retrieval-Augmented Generation (RAG)** syste
 
 ## 📈 Model Evaluation
 
-### 🔬 Average Generation Time (seconds)(https://github.com/user-attachments/assets/fd33c51e-db69-4391-bf27-a4c22749c0f8)
+### 🔬 Average Generation Time (seconds)<img width="1536" height="1024" alt="ChatGPT Image Aug 5, 2025, 08_49_15 PM" src="https://github.com/user-attachments/assets/fd33c51e-db69-4391-bf27-a4c22749c0f8" />
 
 
-### 🧪 ROUGE-L Score Comparison(https://github.com/user-attachments/assets/78318013-dfeb-4b5d-ad74-151d2aadef1f)
+### 🧪 ROUGE-L Score Comparison<img width="1536" height="1024" alt="ChatGPT Image Aug 5, 2025, 08_49_15 PM" src="https://github.com/user-attachments/assets/78318013-dfeb-4b5d-ad74-151d2aadef1f" />
 
 
-### 🔤 BLEU Score Comparison(https://github.com/user-attachments/assets/3f31652e-863a-40d6-a18c-aafd4999a9c5)
+### 🔤 BLEU Score Comparison<img width="1536" height="1024" alt="ChatGPT Image Aug 5, 2025, 08_49_15 PM" src="https://github.com/user-attachments/assets/3f31652e-863a-40d6-a18c-aafd4999a9c5" />
 
 
 
